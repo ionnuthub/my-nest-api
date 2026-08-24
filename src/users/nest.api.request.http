@@ -2,7 +2,14 @@
 GET https://examples.http-client.intellij.net/get
     ?generated-in=WebStorm
 
-###
+
+
+#### Cerere către zona de admin
+#GET localhost:3000/auth/admin
+#Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEzLCJlbWFpbCI6InJhZHVAZXhhbXBsZS5jb20iLCJyb2xlIjoiQURNSU4iLCJpYXQiOjE3ODc0OTM3NjUsImV4cCI6MTc4NzQ5NDY2NX0.O1lRmjPbgA-VR9xinILRY8pdt6TpmB8Mvic-ciJfiuY
+
+
+### 1. Autentificare și salvare token
 POST localhost:3000/auth/login
 Content-Type: application/json
 
@@ -11,8 +18,28 @@ Content-Type: application/json
   "password": "parolaFoarteSigura123$"
 }
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.global.set("accessToken", response.body.accessToken);
+%}
 
-###
+### 2. Accesare rută admin cu token-ul salvat
+GET localhost:3000/auth/admin
+Authorization: Bearer {{accessToken}}
+
+#### Login in contul de utilizator
+#POST localhost:3000/auth/login
+#Content-Type: application/json
+#
+#{
+#  "email": "radu@example.com",
+#  "password": "parolaFoarteSigura123$"
+#}
+
+
+### Creare utilizator
 POST localhost:3000/users
 Content-Type: application/json
 
