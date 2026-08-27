@@ -5,7 +5,6 @@ import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
-import * as Joi from 'joi';
 
 @Module({
   imports: [  ConfigModule.forRoot({
@@ -31,4 +30,10 @@ import * as Joi from 'joi';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+        .apply(LoggerMiddleware)
+        .forRoutes('{*splat}');
+  }
+}

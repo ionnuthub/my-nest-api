@@ -3,6 +3,9 @@ import {ValidationPipe} from "@nestjs/common";
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {ConfigService} from "@nestjs/config";
+import {AllExceptionsFilter} from "./common/filters/all-exceptions/all-exceptions.filter";
+import {TransformInterceptor} from "./common/interceptors/transform/transform.interceptor";
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +17,8 @@ async function bootstrap() {
         transform: true,
       }),
   );
+    app.useGlobalFilters(new AllExceptionsFilter());
+    app.useGlobalInterceptors(new TransformInterceptor());
 
     const configService = app.get(ConfigService);
 
