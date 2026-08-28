@@ -6,9 +6,20 @@ import {PassportModule} from "@nestjs/passport";
 import {JwtModule} from "@nestjs/jwt";
 import { JwtStrategy } from './jwt.strategy';
 import {RolesGuard} from "./roles.guard";
+import {ConfigModule, ConfigService} from "@nestjs/config";
 
 @Module({
-  imports: [UsersModule,PassportModule,JwtModule.register({secret: process.env.JWT_SECRET, signOptions: {expiresIn: '15m'}})],
+  imports: [UsersModule,PassportModule, JwtModule.registerAsync({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+
+    useFactory: (configService: ConfigService) => ({
+      secret: configService.getOrThrow<string>('JWT_SECRET'),
+      signOptions: {
+        expiresIn: '15m',
+      },
+    }),
+  })],
   providers: [AuthService,JwtStrategy, RolesGuard],
   controllers: [AuthController]
 })
