@@ -2,8 +2,9 @@ import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query} 
 import {CreateUserDto} from "./dto/create-user.dto/create-user.dto";
 import {UsersService} from "./users.service";
 import {UpdateUserDto} from "./dto/update-user.dto/update-user.dto";
+import { ApiTags} from "@nestjs/swagger";
 
-
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
 
@@ -13,6 +14,7 @@ export class UsersController {
     findAll(@Query('role') role?: 'INTERN' | 'ENGINEER' | 'ADMIN') {
         return this.usersService.findAll();
     }
+
 
     @Get(':id')
     findOne(@Param('id',ParseIntPipe) id: number) {
