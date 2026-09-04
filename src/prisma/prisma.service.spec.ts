@@ -1,12 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from './prisma.service';
 
 describe('PrismaService', () => {
   let service: PrismaService;
+  const configService = {
+    getOrThrow: jest
+      .fn()
+      .mockReturnValue('postgresql://test:test@localhost:5432/test'),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PrismaService],
+      providers: [
+        PrismaService,
+        {
+          provide: ConfigService,
+          useValue: configService,
+        },
+      ],
     }).compile();
 
     service = module.get<PrismaService>(PrismaService);

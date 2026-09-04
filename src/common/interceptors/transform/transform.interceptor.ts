@@ -13,18 +13,21 @@ interface ApiResponse<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-    implements NestInterceptor<T, ApiResponse<T>>
-{
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponse<T>
+> {
   intercept(
-      context: ExecutionContext,
-      next: CallHandler,
+    context: ExecutionContext,
+    next: CallHandler<T>,
   ): Observable<ApiResponse<T>> {
+    void context;
+
     return next.handle().pipe(
-        map((data) => ({
-          data,
-          timestamp: new Date().toISOString(),
-        })),
+      map((data: T): ApiResponse<T> => ({
+        data,
+        timestamp: new Date().toISOString(),
+      })),
     );
   }
 }

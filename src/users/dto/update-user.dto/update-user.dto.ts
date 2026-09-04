@@ -1,9 +1,11 @@
-import {ApiPropertyOptional, PartialType} from "@nestjs/swagger";
-import {CreateUserDto} from "../create-user.dto/create-user.dto";
+import { ApiPropertyOptional, PartialType, PickType } from '@nestjs/swagger';
+import { CreateUserDto } from '../create-user.dto/create-user.dto';
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {
-    @ApiPropertyOptional({
-        example: 'Nume nou',
-    })
-    name?: string;
+export class UpdateUserDto extends PartialType(
+  PickType(CreateUserDto, ['name'] as const),
+) {
+  @ApiPropertyOptional({
+    example: 'Nume nou',
+  })
+  name?: string;
 }
