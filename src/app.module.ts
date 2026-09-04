@@ -1,12 +1,17 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
+import { createKeyv } from '@keyv/redis';
+import { BullModule } from '@nestjs/bullmq';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as Joi from 'joi';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
 import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
-import Joi from 'joi';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -23,11 +28,35 @@ import Joi from 'joi';
         DATABASE_URL: Joi.string().required(),
 
         JWT_SECRET: Joi.string().min(32).required(),
+
+        REDIS_URL: Joi.string().uri().required(),
       }),
     }),
+
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        stores: [createKeyv(configService.getOrThrow<string>('REDIS_URL'))],
+        ttl: 60_000,
+      }),
+    }),
+
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          url: configService.getOrThrow<string>('REDIS_URL'),
+        },
+      }),
+    }),
+
     UsersModule,
     PrismaModule,
     AuthModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -19,6 +19,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -41,9 +42,15 @@ export class UsersController {
       ],
     },
   })
+  @ApiQuery({
+    name: 'role',
+    required: false,
+    enum: ['USER', 'ADMIN'],
+    description: 'Filtrează utilizatorii după rol',
+  })
   @Get()
-  findAll(@Query('role') role?: 'INTERN' | 'ENGINEER' | 'ADMIN') {
-    return this.usersService.findAll();
+  findAll(@Query('role') role?: 'USER' | 'ADMIN') {
+    return this.usersService.findAll(role);
   }
 
   @ApiOperation({ summary: 'Returnează un utilizator după id' })

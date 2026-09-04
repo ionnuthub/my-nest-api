@@ -18,19 +18,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const isHttpException = exception instanceof HttpException;
 
     const status = isHttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const exceptionResponse = isHttpException
-        ? exception.getResponse()
-        : null;
+    const exceptionResponse = isHttpException ? exception.getResponse() : null;
 
     const message =
-        typeof exceptionResponse === 'object' &&
-        exceptionResponse !== null &&
-        'message' in exceptionResponse
-            ? exceptionResponse.message
-            : 'A apărut o eroare internă';
+      typeof exceptionResponse === 'object' &&
+      exceptionResponse !== null &&
+      'message' in exceptionResponse
+        ? exceptionResponse.message
+        : 'A apărut o eroare internă';
 
     response.status(status).json({
       statusCode: status,
