@@ -12,6 +12,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
 import { MailModule } from './mail/mail.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { MailModule } from './mail/mail.module';
     PrismaModule,
     AuthModule,
     MailModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
