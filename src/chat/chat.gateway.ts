@@ -9,6 +9,9 @@ import {
 } from '@nestjs/websockets';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
+import { ChatService } from './chat.service';
+import { JoinRoomDto } from './dto/join-room.dto';
+import { SendMessageDto } from './dto/send-message.dto';
 
 type JwtPayload = {
   sub: number;
@@ -33,7 +36,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly connectedUsers = new Map<string, AuthenticatedUser>();
 
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly chatService: ChatService,
+  ) {}
 
   async handleConnection(client: Socket): Promise<void> {
     const token = this.extractToken(client);
@@ -61,46 +67,55 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join-room')
-  handleJoinRoom(
-    @MessageBody() roomId: string,
+  async handleJoinRoom(
+    @MessageBody() data: JoinRoomDto,
     @ConnectedSocket() client: Socket,
-  ): void {
+  ): Promise<void> {
     const user = this.getAuthenticatedUser(client);
 
     if (!user) {
       return;
     }
 
-    void client.join(roomId);
+    try {
+      const parsedRoomId = this.chatService.parseRoomId(data.roomId);
 
-    client.emit('joined-room', {
-      roomId,
-      userId: user.userId,
-    });
+      await this.chatService.assertParticipant(user.userId, parsedRoomId);
+      await client.join(String(parsedRoomId));
+
+      client.emit('joined-room', {
+        roomId: parsedRoomId,
+        userId: user.userId,
+      });
+    } catch (error) {
+      this.emitChatError(client, error);
+    }
   }
 
   @SubscribeMessage('send-message')
-  handleSendMessage(
-    @MessageBody()
-    data: {
-      roomId: string;
-      message: string;
-    },
+  async handleSendMessage(
+    @MessageBody() data: SendMessageDto,
     @ConnectedSocket() client: Socket,
-  ): void {
+  ): Promise<void> {
     const user = this.getAuthenticatedUser(client);
 
     if (!user) {
       return;
     }
 
-    this.server.to(data.roomId).emit('new-message', {
-      roomId: data.roomId,
-      message: data.message,
-      clientId: client.id,
-      userId: user.userId,
-      email: user.email,
-    });
+    try {
+      const roomId = this.chatService.parseRoomId(data.roomId);
+      const message = await this.chatService.createMessage({
+        roomId,
+        content: data.message,
+        userId: user.userId,
+        clientId: client.id,
+      });
+
+      this.server.to(String(roomId)).emit('new-message', message);
+    } catch (error) {
+      this.emitChatError(client, error);
+    }
   }
 
   private getAuthenticatedUser(client: Socket): AuthenticatedUser | null {
@@ -147,5 +162,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     client.disconnect(true);
+  }
+
+  private emitChatError(client: Socket, error: unknown): void {
+    client.emit('chat-error', {
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Eroare la procesarea chatului.',
+    });
   }
 }

@@ -20,7 +20,7 @@
 
     <label>
       Room ID:
-      <input id="roomInput" value="general" />
+      <input id="roomInput" type="number" value="1" min="1" />
     </label>
 
     <label>
@@ -68,13 +68,15 @@
       });
 
       document.getElementById('joinBtn').addEventListener('click', () => {
-        const roomId = document.getElementById('roomInput').value;
+        const roomId = Number(document.getElementById('roomInput').value);
 
-        socket.emit('join-room', roomId);
+        socket.emit('join-room', {
+          roomId,
+        });
       });
 
       document.getElementById('sendBtn').addEventListener('click', () => {
-        const roomId = document.getElementById('roomInput').value;
+        const roomId = Number(document.getElementById('roomInput').value);
         const message = document.getElementById('messageInput').value;
 
         socket.emit('send-message', {
