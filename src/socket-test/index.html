@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO Test</title>
+  </head>
+  <body>
+    <h1>Socket.IO Test</h1>
+
+    <label>
+      JWT:
+      <textarea
+        id="tokenInput"
+        rows="4"
+        cols="80"
+        placeholder="Paste JWT access token"
+      ></textarea>
+    </label>
+
+    <button id="connectBtn">Conectează</button>
+
+    <label>
+      Room ID:
+      <input id="roomInput" type="number" value="1" min="1" />
+    </label>
+
+    <label>
+      Message:
+      <input id="messageInput" value="Salut!" />
+    </label>
+
+    <button id="joinBtn">Intră în cameră</button>
+    <button id="sendBtn">Trimite mesaj</button>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+      const socket = io('http://localhost:3000', {
+        autoConnect: false,
+      });
+
+      socket.on('connect', () => {
+        console.log('Connected:', socket.id);
+      });
+
+      socket.on('auth-error', (data) => {
+        console.log('Auth error:', data);
+      });
+
+      socket.on('connect_error', (error) => {
+        console.log('Connection error:', error.message);
+      });
+
+      socket.on('joined-room', (data) => {
+        console.log('Joined room:', data);
+      });
+
+      socket.on('new-message', (data) => {
+        console.log('New message received:', data);
+      });
+
+      document.getElementById('connectBtn').addEventListener('click', () => {
+        const token = document.getElementById('tokenInput').value.trim();
+
+        socket.auth = {
+          token,
+        };
+
+        socket.connect();
+      });
+
+      document.getElementById('joinBtn').addEventListener('click', () => {
+        const roomId = Number(document.getElementById('roomInput').value);
+
+        socket.emit('join-room', {
+          roomId,
+        });
+      });
+
+      document.getElementById('sendBtn').addEventListener('click', () => {
+        const roomId = Number(document.getElementById('roomInput').value);
+        const message = document.getElementById('messageInput').value;
+
+        socket.emit('send-message', {
+          roomId,
+          message,
+        });
+      });
+    </script>
+  </body>
+</html>
